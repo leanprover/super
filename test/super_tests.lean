@@ -1,4 +1,4 @@
-import super
+import tools.super
 
 section
 open super tactic

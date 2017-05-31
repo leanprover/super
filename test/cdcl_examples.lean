@@ -1,4 +1,4 @@
-import tools.super.cdcl
+import super.cdcl
 
 example {a} : a → ¬a → false := by cdcl
 example {a} : a ∨ ¬a := by cdcl

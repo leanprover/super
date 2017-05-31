@@ -1,4 +1,4 @@
-import tools.super
+import super
 open tactic
 
 constant nat_has_dvd : has_dvd nat

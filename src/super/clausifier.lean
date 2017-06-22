@@ -194,7 +194,7 @@ assume hab hnenb,
     (assume h : ¬∃x, ¬b x, hab (take x,
       classical.by_cases
         (assume bx : b x, bx)
-        (assume nbx : ¬b x, begin assert hf : false, apply h, existsi x, assumption, contradiction end)))
+        (assume nbx : ¬b x, have hf : false, { apply h, existsi x, assumption }, by contradiction)))
 
 meta def inf_all_l (c : clause) : tactic (list clause) :=
 on_first_left_dn c $ λhnallb,

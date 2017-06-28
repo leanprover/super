@@ -1,17 +1,12 @@
 import super
 open tactic
 
-constant nat_has_dvd : has_dvd nat
-attribute [instance] nat_has_dvd
-
 def prime (n : ℕ) := ∀d, d ∣ n → d = 1 ∨ d = n
-axiom dvd_refl (m : ℕ) : m ∣ m
-axiom dvd_mul (m n k : ℕ) : m ∣ n → m ∣ (n*k)
 
 axiom nat_mul_cancel_one (m n : ℕ) : m = m * n → n = 1
 
 example {m n : ℕ} : prime (m * n) → m = 1 ∨ n = 1 :=
-by super with dvd_refl dvd_mul nat_mul_cancel_one
+by super with dvd_refl dvd_mul_of_dvd_left nat_mul_cancel_one
 
 example : nat.zero ≠ nat.succ nat.zero := by super
 example (x y : ℕ) : nat.succ x = nat.succ y → x = y := by super

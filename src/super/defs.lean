@@ -9,7 +9,7 @@ open tactic expr monad
 namespace super
 
 meta def try_unfold_one_def (type : expr) : tactic expr :=
-dunfold_expr_core transparency.all type
+dunfold_expr type transparency.all
 
 meta def try_unfold_def_left (c : clause) (i : ℕ) : tactic (list clause) :=
 on_left_at c i $ λt, do

@@ -8,7 +8,7 @@ import .prover_state
 namespace super
 
 meta def simple_selection_strategy (f : (expr → expr → bool) → clause → list ℕ) : selection_strategy :=
-take dc, do gt ← get_term_order, return $
+assume  dc, do gt ← get_term_order, return $
          if dc.selected.empty ∧ dc.c.num_lits > 0
          then { dc with selected := f gt dc.c }
          else dc
@@ -29,7 +29,7 @@ let neg_lits := list.filter (λi, (c.get_lit i).is_neg) (list.range c.num_lits),
     maximal_neg_lits := list.filter_maximal (λi j,
       gt (c.get_lit i).formula (c.get_lit j).formula) neg_lits in
 if ¬maximal_neg_lits.empty then
-  list.taken 1 maximal_neg_lits
+  list.take 1 maximal_neg_lits
 else
   maximal_lits
 
@@ -39,7 +39,7 @@ let maximal_lits := list.filter_maximal (λi j,
   gt (c.get_lit i).formula (c.get_lit j).formula) (list.range c.num_lits),
   maximal_lits_neg := list.filter (λi, (c.get_lit i).is_neg) maximal_lits in
 if ¬maximal_lits_neg.empty then
-  list.taken 1 maximal_lits_neg
+  list.take 1 maximal_lits_neg
 else
   maximal_lits
 
@@ -65,13 +65,13 @@ meta def find_minimal_age (passive : rb_map clause_id derived_clause) : clause_i
 find_minimal_by passive $ λc, (c.sc.priority, c.sc.age, c.id)
 
 meta def weight_clause_selection : clause_selection_strategy :=
-take iter, do state ← state_t.read, return $ find_minimal_weight state.passive
+assume  iter, do state ← state_t.read, return $ find_minimal_weight state.passive
 
 meta def oldest_clause_selection : clause_selection_strategy :=
-take iter, do state ← state_t.read, return $ find_minimal_age state.passive
+assume  iter, do state ← state_t.read, return $ find_minimal_age state.passive
 
 meta def age_weight_clause_selection (thr mod : ℕ) : clause_selection_strategy :=
-take iter, if iter % mod < thr then
+assume  iter, if iter % mod < thr then
               weight_clause_selection iter
            else
               oldest_clause_selection iter

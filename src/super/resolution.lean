@@ -36,7 +36,7 @@ meta def maybe_add_resolvent : prover unit :=
 try_add_resolvent gt ac1 ac2 i1 i2 <|> return ()
 
 meta def resolution_left_inf : inference :=
-take given, do active ← get_active, sequence' $ do
+assume  given, do active ← get_active, sequence' $ do
   given_i ← given.selected,
   guard $ clause.literal.is_neg (given.c.get_lit given_i),
   other ← rb_map.values active,
@@ -46,7 +46,7 @@ take given, do active ← get_active, sequence' $ do
   [maybe_add_resolvent gt other given other_i given_i]
 
 meta def resolution_right_inf : inference :=
-take given, do active ← get_active, sequence' $ do
+assume  given, do active ← get_active, sequence' $ do
   given_i ← given.selected,
   guard $ clause.literal.is_pos (given.c.get_lit given_i),
   other ← rb_map.values active,
@@ -57,6 +57,6 @@ take given, do active ← get_active, sequence' $ do
 
 @[super.inf]
 meta def resolution_inf : inf_decl := inf_decl.mk 40 $
-take given, do gt ← get_term_order, resolution_left_inf gt given >> resolution_right_inf gt given
+assume  given, do gt ← get_term_order, resolution_left_inf gt given >> resolution_right_inf gt given
 
 end super

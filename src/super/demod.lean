@@ -33,7 +33,7 @@ if used_demods.empty then return ([], c2) else
 return (used_demods, c2qf'.close_constn c2qf.2)
 
 meta def demod_fwd_inf : inference :=
-take given, do
+assume  given, do
 active ← get_active,
 demods ← return (do ac ← active.values, guard $ is_demodulator ac.c, guard $ ac.id ≠ given.id, [ac]),
 if demods.empty then skip else do
@@ -49,7 +49,7 @@ remove_redundant active.id used_demods,
 mk_derived c' active.sc.sched_now >>= add_inferred
 
 meta def demod_back_inf : inference :=
-take given, if ¬is_demodulator given.c then skip else
+assume  given, if ¬is_demodulator given.c then skip else
 do active ← get_active, sequence' $ do
 ac ← active.values,
 guard $ ac.id ≠ given.id,
@@ -58,7 +58,7 @@ guard $ ac.id ≠ given.id,
 @[super.inf]
 meta def demod_inf : inf_decl := {
   prio := 10,
-  inf := take given, do
+  inf := assume  given, do
     gt ← get_term_order,
     demod_fwd_inf gt given,
     demod_back_inf gt given,

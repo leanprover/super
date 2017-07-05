@@ -42,7 +42,7 @@ on_right_at' c i $ λhyp,
   end
 
 @[super.inf]
-meta def datatype_infs : inf_decl := inf_decl.mk 10 $ take given, do
+meta def datatype_infs : inf_decl := inf_decl.mk 10 $ assume  given, do
 sequence' (do i ← list.range given.c.num_lits, [inf_if_successful 0 given $ try_no_confusion_eq_r given.c i])
 
 end super

@@ -150,17 +150,17 @@ on_first_right' c $ λhallb,
 lemma imp_l {F a b} [decidable a] : ((a → b) → F) → ((a → F) → F) :=
 λhabf haf, decidable.by_cases
     (assume ha :   a, haf ha)
-    (assume hna : ¬a, habf (take ha, absurd ha hna))
+    (assume hna : ¬a, habf (assume  ha, absurd ha hna))
 
 lemma imp_l' {F a b} [decidable F] : ((a → b) → F) → ((a → F) → F) :=
 λhabf haf, decidable.by_cases
     (assume hf :   F, hf)
-    (assume hnf : ¬F, habf (take ha, absurd (haf ha) hnf))
+    (assume hnf : ¬F, habf (assume  ha, absurd (haf ha) hnf))
 
 lemma imp_l_c {F : Prop} {a b} : ((a → b) → F) → ((a → F) → F) :=
 λhabf haf, classical.by_cases
     (assume hf :   F, hf)
-    (assume hnf : ¬F, habf (take ha, absurd (haf ha) hnf))
+    (assume hnf : ¬F, habf (assume  ha, absurd (haf ha) hnf))
 
 meta def inf_imp_l (c : clause) : tactic (list clause) :=
 on_first_left_dn c $ λhnab,
@@ -191,7 +191,7 @@ lemma demorgan' {F a} {b : a → Prop} : ((∀x, b x) → F) → (((∃x, b x �
 assume hab hnenb,
   classical.by_cases
     (assume h : ∃x, ¬b x, begin cases h with x, apply hnenb, existsi x, intros, contradiction end)
-    (assume h : ¬∃x, ¬b x, hab (take x,
+    (assume h : ¬∃x, ¬b x, hab (assume  x,
       classical.by_cases
         (assume bx : b x, bx)
         (assume nbx : ¬b x, have hf : false, { apply h, existsi x, assumption }, by contradiction)))
@@ -286,7 +286,7 @@ local_false ← target,
 l ← local_context,
 monad.for l (clause.of_proof local_false)
 
-meta def clausify_pre := preprocessing_rule $ take new, lift list.join $ for new $ λ dc, do
+meta def clausify_pre := preprocessing_rule $ assume  new, lift list.join $ for new $ λ dc, do
 cs ← get_clauses_classical [dc.c],
 if cs.length ≤ 1 then
   return (for cs $ λ c, { dc with c := c })

@@ -42,7 +42,7 @@ meta def any_tt_list {m : Type → Type} [monad m] {A} (pred : A → m bool) : l
 
 @[super.inf]
 meta def forward_subsumption : inf_decl := inf_decl.mk 20 $
-take given, do active ← get_active,
+assume  given, do active ← get_active,
 sequence' $ do a ← active.values,
   guard $ a.id ≠ given.id,
   return $ do

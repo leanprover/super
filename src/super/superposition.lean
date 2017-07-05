@@ -46,9 +46,9 @@ variable lt_in_termorder : bool
 variable congr_ax : name
 
 lemma {u v w} sup_ltr (F : Sort u) (A : Sort v) (a1 a2) (f : A → Sort w) : (f a1 → F) → f a2 → a1 = a2 → F :=
-take hnfa1 hfa2 he, hnfa1 (@eq.rec A a2 f hfa2 a1 he.symm)
+assume  hnfa1 hfa2 he, hnfa1 (@eq.rec A a2 f hfa2 a1 he.symm)
 lemma {u v w} sup_rtl (F : Sort u) (A : Sort v) (a1 a2) (f : A → Sort w) : (f a1 → F) → f a2 → a2 = a1 → F :=
-take hnfa1 hfa2 heq, hnfa1 (@eq.rec A a2 f hfa2 a1 heq)
+assume  hnfa1 hfa2 heq, hnfa1 (@eq.rec A a2 f hfa2 a1 heq)
 
 meta def is_eq_dir (e : expr) (ltr : bool) : option (expr × expr) :=
 match is_eq e with
@@ -100,7 +100,7 @@ meta def try_add_sup : prover unit :=
   <|> return ()
 
 meta def superposition_back_inf : inference :=
-take given, do active ← get_active, sequence' $ do
+assume  given, do active ← get_active, sequence' $ do
   given_i ← given.selected,
   guard (given.c.get_lit given_i).is_pos,
   option.to_monad $ is_eq (given.c.get_lit given_i).formula,
@@ -113,7 +113,7 @@ take given, do active ← get_active, sequence' $ do
       try_add_sup gt given other given_i other_i pos ff ``super.sup_rtl]
 
 meta def superposition_fwd_inf : inference :=
-take given, do active ← get_active, sequence' $ do
+assume  given, do active ← get_active, sequence' $ do
   given_i ← given.selected,
   other ← rb_map.values active,
   guard $ ¬given.sc.in_sos ∨ ¬other.sc.in_sos,
@@ -126,7 +126,7 @@ take given, do active ← get_active, sequence' $ do
 
 @[super.inf]
 meta def superposition_inf : inf_decl := inf_decl.mk 40 $
-take given, do gt ← get_term_order,
+assume  given, do gt ← get_term_order,
 superposition_fwd_inf gt given,
 superposition_back_inf gt given
 

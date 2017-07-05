@@ -53,7 +53,7 @@ meta def mk_splitting_clause (empty_clause : clause) (comps : list (list expr)) 
 return $ { empty_clause with proof := p }.close_constn hs
 
 @[super.inf]
-meta def splitting_inf : inf_decl := inf_decl.mk 30 $ take given, do
+meta def splitting_inf : inf_decl := inf_decl.mk 30 $ assume  given, do
 lf ← flip monad.lift state_t.read $ λst, st.local_false,
 op ← given.c.open_constn given.c.num_binders,
 if list.bor (given.c.get_lits.map $ λl, (is_local_not lf l.formula).is_some) then return () else

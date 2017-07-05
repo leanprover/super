@@ -66,7 +66,7 @@ on_first_right' c $ λhinh,
   end
 
 @[super.inf]
-meta def inhabited_infs : inf_decl := inf_decl.mk 10 $ take given, do
+meta def inhabited_infs : inf_decl := inf_decl.mk 10 $ assume  given, do
 for' [try_assumption_lookup_left,
       try_nonempty_lookup_left,
       try_nonempty_left, try_nonempty_right,

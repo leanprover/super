@@ -23,7 +23,7 @@ clause.meta_closure qf.2 $ clause.close_constn (opened.1.inst refl) opened.2
 end
 
 @[super.inf]
-meta def unify_eq_inf : inf_decl := inf_decl.mk 40 $ take given, sequence' $ do
+meta def unify_eq_inf : inf_decl := inf_decl.mk 40 $ assume  given, sequence' $ do
 i ← given.selected,
 [inf_if_successful 0 given (do u ← try_unify_eq_l given.c i, return [u])]
 
@@ -37,6 +37,6 @@ match is_eq literal.formula with
 end
 
 meta def refl_r_pre : prover unit :=
-preprocessing_rule $ take new, return $ filter (λc, ¬has_refl_r c.c) new
+preprocessing_rule $ assume  new, return $ filter (λc, ¬has_refl_r c.c) new
 
 end super

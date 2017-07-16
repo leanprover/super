@@ -9,7 +9,7 @@ meta def get_metas : expr → list expr
 | (var _) := []
 | (sort _) := []
 | (const _ _) := []
-| (mvar n t) := expr.mvar n t :: get_metas t
+| (mvar n pp_n t) := expr.mvar pp_n n t :: get_metas t
 | (local_const _ _ _ t) := get_metas t
 | (app a b) := get_metas a ++ get_metas b
 | (lam _ _ d b) := get_metas d ++ get_metas b
@@ -18,7 +18,7 @@ meta def get_metas : expr → list expr
 | (macro _ _) := []
 
 meta def get_meta_type : expr → expr
-| (mvar _ t) := t
+| (mvar _ _ t) := t
 | _ := mk_var 0
 
 -- TODO(gabriel): think about how to handle the avalanche of implicit arguments
@@ -26,7 +26,7 @@ meta def expr_size : expr → nat
 | (var _) := 1
 | (sort _) := 1
 | (const _ _) := 1
-| (mvar n t) := 1
+| (mvar n pp_n t) := 1
 | (local_const _ _ _ _) := 1
 | (app a b) := expr_size a + expr_size b
 | (lam _ _ d b) := 1 + expr_size b
@@ -101,7 +101,7 @@ private meta def contained_funsyms' : expr → rb_map name expr → rb_map name 
 | (var _) m := m
 | (sort _) m := m
 | (const n ls) m := rb_map.insert m n (const n ls)
-| (mvar _ t) m := contained_funsyms' t m
+| (mvar _ _ t) m := contained_funsyms' t m
 | (local_const uniq pp bi t) m := rb_map.insert m uniq (local_const uniq pp bi t)
 | (app a b) m := contained_funsyms' a (contained_funsyms' b m)
 | (lam _ _ d b) m := contained_funsyms' d (contained_funsyms' b m)
@@ -116,7 +116,7 @@ private meta def contained_lconsts' : expr → rb_map name expr → rb_map name 
 | (var _) m := m
 | (sort _) m := m
 | (const _ _) m := m
-| (mvar _ t) m := contained_lconsts' t m
+| (mvar _ _ t) m := contained_lconsts' t m
 | (local_const uniq pp bi t) m := contained_lconsts' t (rb_map.insert m uniq (local_const uniq pp bi t))
 | (app a b) m := contained_lconsts' a (contained_lconsts' b m)
 | (lam _ _ d b) m := contained_lconsts' d (contained_lconsts' b m)

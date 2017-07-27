@@ -286,7 +286,7 @@ local_false ← target,
 l ← local_context,
 l.mmap (clause.of_proof local_false)
 
-meta def clausify_pre := preprocessing_rule $ assume  new, lift list.join $ new.mmap $ λ dc : derived_clause, do
+meta def clausify_pre := preprocessing_rule $ assume  new, lift list.join $ new.mmap $ λ dc, do
 cs ← get_clauses_classical [dc.c],
 if cs.length ≤ 1 then
   return (cs.map $ λ c, { dc with c := c })

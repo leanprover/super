@@ -54,7 +54,7 @@ op ← c.open_constn (c.num_quants + i),
 @guard tactic _ ((op.1.get_lit 0).is_pos) _,
 h ← mk_local_def `h (op.1.get_lit 0).formula,
 new_hyps ← f h,
-new_hyps.mmap (λnew_hyp : list expr × expr, do
+new_hyps.mmap (λnew_hyp, do
   type ← infer_type new_hyp.2,
   nh ← mk_local_def `nh $ imp type c.local_false,
   return $ (op.1.inst (lambdas [h] (app nh new_hyp.2))).close_constn (op.2 ++ new_hyp.1 ++ [nh]))

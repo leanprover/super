@@ -45,7 +45,7 @@ else
   maximal_lits
 
 meta def clause_weight (c : derived_clause) : nat :=
-(c.c.get_lits.map (λl, expr_size l.formula + if l.is_pos then 10 else 1)).sum
+(c.c.get_lits.map (λl : clause.literal, expr_size l.formula + if l.is_pos then 10 else 1)).sum
 
 meta def find_minimal_by (passive : rb_map clause_id derived_clause)
                          {A} [has_ordering A]

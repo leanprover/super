@@ -9,7 +9,7 @@ open tactic expr monad super
 meta def cdcl_t (th_solver : tactic unit) : tactic unit := do
 as_refutation, local_false ← target,
 clauses ← clauses_of_context, clauses ← get_clauses_classical clauses,
-for clauses (λc, do c_pp ← pp c, clause.validate c <|> fail c_pp),
+clauses.mmap' (λc, do c_pp ← pp c, clause.validate c <|> fail c_pp),
 res ← cdcl.solve (cdcl.theory_solver_of_tactic th_solver) local_false clauses,
 match res with
 | (cdcl.result.unsat proof) := exact proof

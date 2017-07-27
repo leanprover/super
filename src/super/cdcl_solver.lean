@@ -290,7 +290,7 @@ set_watches n c
 
 meta def mk_clause (c : clause) : solver unit := do
 c : clause ← c.distinct,
-for c.get_lits (λl, mk_var l.formula),
+c.get_lits.mmap' (λl, mk_var l.formula),
 revert_to_decision_level_zero (),
 state_t.modify $ λst, { st with clauses := c :: st.clauses },
 c_name ← mk_fresh_name,
@@ -303,7 +303,7 @@ match st.vars.find v with
 | none := fail $ "unknown variable: " ++ v.to_string
 | some ⟨ph, some _⟩ :=
   let watches := st.watches_for $ prop_lit.of_var_and_phase v (bnot ph) in
-  for' watches.to_list $ λw, update_watches w.1 w.2.2.2 w.2.1 w.2.2.1
+  watches.to_list.mmap' $ λw, update_watches w.1 w.2.2.2 w.2.1 w.2.2.1
 end
 
 meta def analyze_conflict' (local_false : expr) : proof_term → list trail_elem → clause
@@ -409,7 +409,7 @@ end
 meta def run : solver result := run' theory_solver ()
 
 meta def solve (local_false : expr) (clauses : list clause) : tactic result := do
-res ← (do for clauses mk_clause, run theory_solver) (state.initial local_false),
+res ← (do clauses.mmap' mk_clause, run theory_solver) (state.initial local_false),
 return res.1
 
 meta def theory_solver_of_tactic (th_solver : tactic unit) : cdcl.solver (option cdcl.proof_term) :=
@@ -418,7 +418,7 @@ hyps ← return $ s.trail.map (λe, e.hyp),
 subgoal ← mk_meta_var s.local_false,
 goals ← get_goals,
 set_goals [subgoal],
-hvs ← for hyps (λhyp, assertv hyp.local_pp_name hyp.local_type hyp),
+hvs ← hyps.mmap' (λhyp, assertv hyp.local_pp_name hyp.local_type hyp),
 solved ← (do th_solver, done, return tt) <|> return ff,
 set_goals goals,
 if solved then do

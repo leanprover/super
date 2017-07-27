@@ -43,8 +43,8 @@ meta def run_prover_loop
   (inference_rules : list inference)
   : ℕ → prover (option expr) | i := do
 sequence' preprocessing_rules,
-new ← take_newly_derived, for' new register_as_passive,
-when (is_trace_enabled_for `super) $ for' new $ λn,
+new ← take_newly_derived, new.mmap' register_as_passive,
+when (is_trace_enabled_for `super) $ new.mmap' $ λn,
   tactic.trace { n with c := { (n.c) with proof := const (mk_simple_name "derived") [] } },
 needs_sat_run ← flip monad.lift state_t.read (λst, st.needs_sat_run),
 if needs_sat_run then do
@@ -93,10 +93,10 @@ open super
 meta def super (sos_lemmas : list expr) : tactic unit := with_trim $ do
 as_refutation, local_false ← target,
 clauses ← clauses_of_context,
-sos_clauses ← monad.for sos_lemmas (clause.of_proof local_false),
+sos_clauses ← sos_lemmas.mmap (clause.of_proof local_false),
 initial_state ← prover_state.initial local_false (clauses ++ sos_clauses),
 inf_names ← attribute.get_instances `super.inf,
-infs ← for inf_names $ λn, eval_expr inf_decl (const n []),
+infs ← inf_names.mmap $ λn, eval_expr inf_decl (const n []),
 infs ← return $ list.map inf_decl.inf $ list.sort_on inf_decl.prio infs,
 res ← run_prover_loop selection21 (age_weight_clause_selection 3 4)
   default_preprocessing infs
@@ -112,7 +112,7 @@ open lean.parser
 open interactive
 open interactive.types
 
-meta def with_lemmas (ls : parse $ many ident) : tactic unit := monad.for' ls $ λl, do
+meta def with_lemmas (ls : parse $ many ident) : tactic unit := ls.mmap' $ λl, do
 p ← mk_const l,
 t ← infer_type p,
 n ← get_unused_name p.get_app_fn.const_name none,
@@ -121,7 +121,7 @@ tactic.assertv n t p
 meta def super (extra_clause_names : parse $ many ident)
                (extra_lemma_names : parse with_ident_list) : tactic unit := do
 with_lemmas extra_clause_names,
-extra_lemmas ← monad.for extra_lemma_names mk_const,
+extra_lemmas ← extra_lemma_names.mmap mk_const,
 _root_.super extra_lemmas
 
 end tactic.interactive

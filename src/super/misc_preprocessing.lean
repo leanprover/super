@@ -29,7 +29,7 @@ preprocessing_rule $ λnew,
 return $ remove_duplicates new
 
 meta def clause_normalize_pre : prover unit :=
-preprocessing_rule $ λnew, for new $ λdc,
+preprocessing_rule $ λnew, new.mmap $ λdc,
 do c' ← dc.c.normalize, return { dc with c := c' }
 
 end super

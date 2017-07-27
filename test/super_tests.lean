@@ -70,8 +70,8 @@ example (x y : ℕ) (h : nat.zero = nat.succ nat.zero) (h2 : nat.succ x = nat.su
 h ← get_local `h >>= clause.of_classical_proof,
 h2 ← get_local `h2 >>= clause.of_classical_proof,
 cs ← try_no_confusion_eq_r h 0,
-for' cs clause.validate,
+cs.mmap' clause.validate,
 cs ← try_no_confusion_eq_r h2 0,
-for' cs clause.validate,
+cs.mmap' clause.validate,
 to_expr ``(trivial) >>= exact
 end

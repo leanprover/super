@@ -48,7 +48,7 @@ assume  given, do gt ← get_term_order, sequence' $ do
   return $ try_infer_factor gt given i j <|> return ()
 
 meta def factor_dup_lits_pre := preprocessing_rule $ assume  new, do
-for new $ λdc, do
+new.mmap $ λdc, do
   dist ← dc.c.distinct,
   return { dc with c := dist }
 

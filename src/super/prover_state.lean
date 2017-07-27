@@ -91,7 +91,7 @@ namespace locked_clause
 meta instance : has_to_tactic_format locked_clause :=
 ⟨λc, do
 c_fmt ← pp c.dc,
-reasons_fmt ← pp (c.reasons.map (λr, r.for (λa, a.local_type))),
+reasons_fmt ← pp (c.reasons.map (λr, r.map (λa, a.local_type))),
 return $ c_fmt ++ " (locked in case of: " ++ reasons_fmt ++ ")"
 ⟩
 
@@ -121,7 +121,7 @@ passive_fmts ← mapm pp $ rb_map.values s.passive,
 new_fmts ← mapm pp s.newly_derived,
 locked_fmts ← mapm pp s.locked,
 sat_fmts ← mapm pp s.sat_solver.clauses,
-sat_model_fmts ← for s.current_model.to_list (λx, if x.2 = tt then pp x.1 else pp `(not %%x.1)),
+sat_model_fmts ← s.current_model.to_list.mmap (λx, if x.2 = tt then pp x.1 else pp `(not %%x.1)),
 prec_fmts ← mapm pp s.prec,
 return (join_with_nl
   ([to_fmt "active:"]      ++ ((append (to_fmt "  ")) <$> active_fmts) ++
@@ -258,7 +258,7 @@ c ← c.distinct,
 already_added ← flip monad.lift state_t.read $ λst, decidable.to_bool $
                      c.type ∈ st.sat_solver.clauses.map (λd, d.type),
 if already_added then return () else do
-for c.get_lits $ λl, mk_sat_var l.formula l.is_neg suggested_ev,
+c.get_lits.mmap' $ λl, mk_sat_var l.formula l.is_neg suggested_ev,
 in_sat_solver $ cdcl.mk_clause c,
 state_t.modify $ λst, { st with needs_sat_run := tt }
 
@@ -319,7 +319,7 @@ new_locked ← flip filter locked (λlc, do
 state_t.modify $ λst, { st with locked := new_locked }
 
 meta def move_active_to_locked : prover unit :=
-do active ← get_active, for' active.values $ λac, do
+do active ← get_active, active.values.mmap' $ λac, do
   c_val ← sat_eval_assertions ac.assertions,
   if ¬c_val then do
      state_t.modify $ λst, { st with
@@ -330,7 +330,7 @@ do active ← get_active, for' active.values $ λac, do
     return ()
 
 meta def move_passive_to_locked : prover unit :=
-do passive ← flip monad.lift state_t.read $ λst, st.passive, for' passive.to_list $ λpc, do
+do passive ← flip monad.lift state_t.read $ λst, st.passive, passive.to_list.mmap' $ λpc, do
   c_val ← sat_eval_assertions pc.2.assertions,
   if ¬c_val then do
     state_t.modify $ λst, { st with
@@ -421,7 +421,7 @@ meta def empty (local_false : expr) : prover_state :=
   current_model := rb_map.mk _ _, sat_hyps := rb_map.mk _ _, needs_sat_run := ff }
 
 meta def initial (local_false : expr) (clauses : list clause) : tactic prover_state := do
-after_setup ← for' clauses (λc,
+after_setup ← clauses.mmap' (λc : clause,
   let in_sos := ((contained_lconsts c.proof).erase local_false.local_uniq_name).size = 0 in
   do mk_derived c { priority := score.prio.immediate, in_sos := in_sos,
                     age := 0, cost := 0 } >>= add_inferred
@@ -440,13 +440,13 @@ return $ list.foldl score.combine { priority := score.prio.default,
 
 meta def inf_if_successful (add_cost : ℕ) (parent : derived_clause) (tac : tactic (list clause)) : prover unit :=
 (do inferred ← tac,
-    for' inferred $ λc,
+    inferred.mmap' $ λc,
       inf_score add_cost [parent.sc] >>= mk_derived c >>= add_inferred)
 <|> return ()
 
 meta def simp_if_successful (parent : derived_clause) (tac : tactic (list clause)) : prover unit :=
 (do inferred ← tac,
-    for' inferred $ λc,
+    inferred.mmap' $ λc,
       mk_derived c parent.sc.sched_now >>= add_inferred,
     remove_redundant parent.id [])
 <|> return ()

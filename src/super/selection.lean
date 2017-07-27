@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gabriel Ebner
 -/
 import .prover_state
+import data.list.basic
 
 namespace super
 
@@ -44,7 +45,7 @@ else
   maximal_lits
 
 meta def clause_weight (c : derived_clause) : nat :=
-(c.c.get_lits.for (λl, expr_size l.formula + if l.is_pos then 10 else 1)).sum
+(c.c.get_lits.map (λl : clause.literal, expr_size l.formula + if l.is_pos then 10 else 1)).sum
 
 meta def find_minimal_by (passive : rb_map clause_id derived_clause)
                          {A} [has_ordering A]

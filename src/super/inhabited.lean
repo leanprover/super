@@ -67,10 +67,10 @@ on_first_right' c $ λhinh,
 
 @[super.inf]
 meta def inhabited_infs : inf_decl := inf_decl.mk 10 $ assume  given, do
-for' [try_assumption_lookup_left,
-      try_nonempty_lookup_left,
-      try_nonempty_left, try_nonempty_right,
-      try_inhabited_left, try_inhabited_right] $ λr,
+[try_assumption_lookup_left,
+ try_nonempty_lookup_left,
+ try_nonempty_left, try_nonempty_right,
+ try_inhabited_left, try_inhabited_right].mmap' $ λr,
       simp_if_successful given (r given.c)
 
 end super

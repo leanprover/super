@@ -212,7 +212,7 @@ match list.filter (λm, ¬has_meta_var (get_meta_type m)) metas with
      if metas.empty then
        return []
      else do
-       for' metas (λm, do trace (expr.to_string m), t ← infer_type m, trace (expr.to_string t)),
+       metas.mmap' (λm, do trace (expr.to_string m), t ← infer_type m, trace (expr.to_string t)),
        fail "could not sort metas"
 | ((mvar n pp_n t) :: _) := do
   c ← infer_type (mvar n pp_n t) >>= mk_local_def `x,

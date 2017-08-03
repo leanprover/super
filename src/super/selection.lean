@@ -4,7 +4,6 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gabriel Ebner
 -/
 import .prover_state
-import data.list.basic
 
 namespace super
 
@@ -44,8 +43,12 @@ if ¬maximal_lits_neg.empty then
 else
   maximal_lits
 
+def sum {α} [has_zero α] [has_add α] : list α → α
+| [] := 0
+| (x::xs) := x + sum xs
+
 meta def clause_weight (c : derived_clause) : nat :=
-(c.c.get_lits.map (λl : clause.literal, expr_size l.formula + if l.is_pos then 10 else 1)).sum
+sum (c.c.get_lits.map (λl : clause.literal, expr_size l.formula + if l.is_pos then 10 else 1))
 
 meta def find_minimal_by (passive : rb_map clause_id derived_clause)
                          {A} [has_ordering A]

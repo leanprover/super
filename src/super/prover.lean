@@ -60,9 +60,9 @@ if needs_sat_run then do
   end
 else do
 passive ← get_passive,
-if rb_map.size passive = 0 then return none else do
+if passive.size = 0 then return none else do
 given_name ← clause_selection i,
-given ← option.to_monad (rb_map.find passive given_name),
+given ← option.to_monad (passive.find given_name),
 -- trace_clauses,
 remove_passive given_name,
 given ← literal_selection given,

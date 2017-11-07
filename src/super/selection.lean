@@ -5,6 +5,8 @@ Authors: Gabriel Ebner
 -/
 import .prover_state
 
+open native
+
 namespace super
 
 meta def simple_selection_strategy (f : (expr → expr → bool) → clause → list ℕ) : selection_strategy :=

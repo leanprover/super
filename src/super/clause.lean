@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gabriel Ebner
 -/
 import init.meta.tactic .utils .trim
-open expr list tactic monad decidable
+open expr list tactic monad decidable native
 
 namespace super
 

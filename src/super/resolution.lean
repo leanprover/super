@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Gabriel Ebner
 -/
 import .clause .prover_state .utils
-open tactic monad
+open tactic monad native
 
 namespace super
 

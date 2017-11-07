@@ -7,7 +7,7 @@ Authors: Gabriel Ebner
 -- Polytime version of lexicographic path order as described in:
 -- Things to know when implementing LPO, Bernd Löchner, ESFOR 2004
 import .utils
-open expr decidable monad
+open expr decidable monad native
 
 def lex {T} [decidable_eq T] (gt : T → T → bool) : list T → list T → bool
 | (s::ss) (t::ts) := if s = t then lex ss ts else gt s t

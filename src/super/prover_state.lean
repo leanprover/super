@@ -49,7 +49,9 @@ def clause_id := ℕ
 namespace clause_id
 def to_nat (id : clause_id) : ℕ := id
 instance : decidable_eq clause_id := nat.decidable_eq
-instance : has_ordering clause_id := nat.has_ordering
+instance : has_lt clause_id := nat.has_lt
+instance : decidable_rel ((<) : clause_id → clause_id → Prop) := nat.decidable_lt
+
 end clause_id
 
 meta structure derived_clause :=

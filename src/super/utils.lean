@@ -34,19 +34,12 @@ meta def expr_size : expr → nat
 | (elet _ t v b) := 1 + expr_size v + expr_size b
 | (macro _ _) := 1
 
-namespace ordering
-
-def is_lt {A} [has_ordering A] (x y : A) : bool :=
-match has_ordering.cmp x y with ordering.lt := tt | _ := ff end
-
-end ordering
-
 namespace list
 
-meta def nub {A} [has_ordering A] (l : list A) : list A :=
+meta def nub {A} [has_lt A] [decidable_rel ((<) : A → A → Prop)] (l : list A) : list A :=
 rb_map.keys (rb_map.set_of_list l)
 
-meta def nub_on {A B} [has_ordering B] (f : A → B) (l : list A) : list A :=
+meta def nub_on {A B} [has_lt B] [decidable_rel ((<) : B → B → Prop)] (f : A → B) (l : list A) : list A :=
 rb_map.values (rb_map.of_list (map (λx, (f x, x)) l))
 
 def nub_on' {A B} [decidable_eq B] (f : A → B) : list A → list A
@@ -72,23 +65,23 @@ private def zip_with_index' {A} : ℕ → list A → list (A × ℕ)
 def zip_with_index {A} : list A → list (A × ℕ) :=
 zip_with_index' 0
 
-meta def merge_sorted {A} [has_ordering A] : list A → list A → list A
+meta def merge_sorted {A} [has_lt A] [decidable_rel ((<) : A → A → Prop)] : list A → list A → list A
 | [] ys := ys
 | xs [] := xs
 | (x::xs) (y::ys) :=
-  if ordering.is_lt x y then
+  if x < y then
     x :: merge_sorted xs (y::ys)
   else
     y :: merge_sorted (x::xs) ys
 
-meta def sort {A} [has_ordering A] : list A → list A
+meta def sort {A} [has_lt A] [decidable_rel ((<) : A → A → Prop)] : list A → list A
 | (x::xs) :=
-  let (smaller, greater_eq) := partition (λy, ordering.is_lt y x) xs in
+  let (smaller, greater_eq) := partition (λy, y < x) xs in
   merge_sorted (sort smaller) (x :: sort greater_eq)
 | [] := []
 
-meta def sort_on {A B} (f : A → B) [has_ordering B] : list A → list A :=
-@sort _ ⟨λx y, has_ordering.cmp (f x) (f y)⟩
+meta def sort_on {A B} (f : A → B) [has_lt B] [decidable_rel ((<) : B → B → Prop)] : list A → list A :=
+@sort _ ⟨λx y, f x < f y⟩ _
 
 end list
 

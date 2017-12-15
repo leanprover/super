@@ -102,7 +102,7 @@ res ← run_prover_loop selection21 (age_weight_clause_selection 3 4)
   default_preprocessing infs
   0 initial_state,
 match res with
-| (some empty_clause, st) := apply empty_clause
+| (some empty_clause, st) := apply empty_clause >> skip
 | (none, saturation) := do sat_fmt ← pp saturation,
                            fail $ to_fmt "saturation:" ++ format.line ++ sat_fmt
 end

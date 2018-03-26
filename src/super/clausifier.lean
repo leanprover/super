@@ -12,7 +12,7 @@ universe u
 namespace super
 
 meta def try_option {a : Type u} (tac : tactic a) : tactic (option a) :=
-lift some tac <|> return none
+some <$> tac <|> return none
 
 private meta def normalize : expr → tactic expr | e := do
 e' ← whnf e reducible,
@@ -237,14 +237,14 @@ meta def first_some {a : Type} : list (tactic (option a)) → tactic (option a)
 
 private meta def get_clauses_core' (rules : list (clause → tactic (list clause)))
      : list clause → tactic (list clause) | cs :=
-lift list.join $ do
+list.join <$> do
 cs.mmap $ λc, do first $
 rules.map (λr, r c >>= get_clauses_core') ++ [return [c]]
 
 meta def get_clauses_core (rules : list (clause → tactic (list clause))) (initial : list clause)
      : tactic (list clause) := do
 clauses ← get_clauses_core' rules initial,
-filter (λc, lift bnot $ is_taut c) $ list.nub_on clause.type clauses
+filter (λc, bnot <$> is_taut c) $ list.nub_on clause.type clauses
 
 meta def clausification_rules_intuit : list (clause → tactic (list clause)) :=
 [ inf_false_l, inf_false_r, inf_true_l, inf_true_r,
@@ -286,12 +286,12 @@ local_false ← target,
 l ← local_context,
 l.mmap (clause.of_proof local_false)
 
-meta def clausify_pre := preprocessing_rule $ assume  new, lift list.join $ new.mmap $ λ dc, do
+meta def clausify_pre := preprocessing_rule $ assume  new, list.join <$> new.mmap (λ dc, do
 cs ← get_clauses_classical [dc.c],
 if cs.length ≤ 1 then
   return (cs.map $ λ c, { dc with c := c })
 else
-  cs.mmap (λc, mk_derived c dc.sc)
+  cs.mmap (λc, mk_derived c dc.sc))
 
 -- @[super.inf]
 meta def clausification_inf : inf_decl := inf_decl.mk 0 $

@@ -14,8 +14,8 @@ meta def trim : expr → tactic expr
   if ¬b.has_var then
     trim b
   else
-    lift₂ app (trim (lam n m d b)) (trim arg)
-| (app a b) := lift₂ app (trim a) (trim b)
+    app <$> trim (lam n m d b) <*> trim arg
+| (app a b) := app <$> trim a <*> trim b
 | (lam n m d b) := do
   x ← mk_local' `x m d,
   b' ← trim (instantiate_var b x),

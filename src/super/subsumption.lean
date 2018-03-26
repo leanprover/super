@@ -69,7 +69,7 @@ meta def subsumption_interreduction : list derived_clause → prover (list deriv
     -- TODO: update score
     subsumption_interreduction cs
   else do
-    cs_not_subsumed_by_c ← filter (λd, lift bnot (does_subsume_with_assertions c d)) cs,
+    cs_not_subsumed_by_c ← filter (λd, bnot <$> does_subsume_with_assertions c d) cs,
     cs' ← subsumption_interreduction cs_not_subsumed_by_c,
     return (c::cs')
 | [] := return []

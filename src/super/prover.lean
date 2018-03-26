@@ -34,7 +34,7 @@ declare_trace super
 namespace super
 
 meta def trace_clauses : prover unit :=
-do state ← state_t.read, trace state
+do state ← get, trace state
 
 meta def run_prover_loop
   (literal_selection : selection_strategy)
@@ -46,13 +46,13 @@ sequence' preprocessing_rules,
 new ← take_newly_derived, new.mmap' register_as_passive,
 when (is_trace_enabled_for `super) $ new.mmap' $ λn,
   tactic.trace { n with c := { (n.c) with proof := const (mk_simple_name "derived") [] } },
-needs_sat_run ← flip monad.lift state_t.read (λst, st.needs_sat_run),
+needs_sat_run ← flip (<$>) get (λst, st.needs_sat_run),
 if needs_sat_run then do
   res ← do_sat_run,
   match res with
   | some proof := return (some proof)
   | none := do
-    model ← flip monad.lift state_t.read (λst, st.current_model),
+    model ← flip (<$>) get (λst, st.current_model),
       when (is_trace_enabled_for `super) (do
       pp_model ← pp (model.to_list.map (λlit, if lit.2 = tt then lit.1 else `(not %%lit.1))),
       trace $ to_fmt "sat model: " ++ pp_model),
@@ -98,9 +98,9 @@ initial_state ← prover_state.initial local_false (clauses ++ sos_clauses),
 inf_names ← attribute.get_instances `super.inf,
 infs ← inf_names.mmap $ λn, eval_expr inf_decl (const n []),
 infs ← return $ list.map inf_decl.inf $ list.sort_on inf_decl.prio infs,
-res ← run_prover_loop selection21 (age_weight_clause_selection 3 4)
+res ← (run_prover_loop selection21 (age_weight_clause_selection 3 4)
   default_preprocessing infs
-  0 initial_state,
+  0).run initial_state,
 match res with
 | (some empty_clause, st) := apply empty_clause >> skip
 | (none, saturation) := do sat_fmt ← pp saturation,

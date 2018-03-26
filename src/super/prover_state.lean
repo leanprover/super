@@ -140,49 +140,39 @@ meta instance : has_to_tactic_format prover_state :=
 meta def prover := state_t prover_state tactic
 
 namespace prover
+local attribute [reducible] prover cdcl.solver
 
-meta instance : monad prover := state_t.monad _ _
-
-meta instance : has_monad_lift tactic prover :=
-monad.monad_transformer_lift (state_t prover_state) tactic
-
+meta instance : monad prover := infer_instance
+meta instance : alternative prover := infer_instance
+meta instance : monad_state _ prover := infer_instance
+meta instance : monad_state_adapter _ _ cdcl.solver prover := infer_instance
+meta instance : has_monad_lift tactic prover := infer_instance
 meta instance (α : Type) : has_coe (tactic α) (prover α) :=
-⟨monad.monad_lift⟩
-
-meta def fail {α β : Type} [has_to_format β] (msg : β) : prover α :=
-tactic.fail msg
-
-meta def orelse (A : Type) (p1 p2 : prover A) : prover A :=
-assume  state, p1 state <|> p2 state
-
-meta instance : alternative prover :=
-{ prover.monad with
-  failure := λα, fail "failed",
-  orelse := orelse }
+⟨monad_lift⟩
 
 end prover
 
 meta def selection_strategy := derived_clause → prover derived_clause
 
 meta def get_active : prover (rb_map clause_id derived_clause) :=
-do state ← state_t.read, return state.active
+do state ← get, return state.active
 
-meta def add_active (a : derived_clause) : prover unit :=
-do state ← state_t.read,
-state_t.write { state with active := state.active.insert a.id a }
+meta def add_active (a : derived_clause) : prover punit :=
+do state ← get,
+put { state with active := state.active.insert a.id a }
 
 meta def get_passive : prover (rb_map clause_id derived_clause) :=
-lift passive state_t.read
+passive <$> get
 
 meta def get_precedence : prover (list expr) :=
-do state ← state_t.read, return state.prec
+do state ← get, return state.prec
 
 meta def get_term_order : prover (expr → expr → bool) := do
-state ← state_t.read,
+state ← get,
 return $ mk_lpo (name_of_funsym <$> state.prec)
 
-private meta def set_precedence (new_prec : list expr) : prover unit :=
-do state ← state_t.read, state_t.write { state with prec := new_prec }
+private meta def set_precedence (new_prec : list expr) : prover punit :=
+do state ← get, put { state with prec := new_prec }
 
 meta def register_consts_in_precedence (consts : list expr) := do
 p ← get_precedence,
@@ -190,15 +180,12 @@ p_set ← return (rb_map.set_of_list (name_of_funsym <$> p)),
 new_syms ← return $ list.filter (λc, ¬p_set.contains (name_of_funsym c)) consts,
 set_precedence (new_syms ++ p)
 
-meta def in_sat_solver {A} (cmd : cdcl.solver A) : prover A := do
-state ← state_t.read,
-result ← cmd state.sat_solver,
-state_t.write { state with sat_solver := result.2 },
-return result.1
+meta def in_sat_solver {A} : cdcl.solver A → prover A :=
+adapt_state (λ st, (st.sat_solver, st)) (λ sat st, { sat_solver := sat, ..st })
 
 meta def collect_ass_hyps (c : clause) : prover (list expr) :=
 let lcs := contained_lconsts c.proof in
-do st ← state_t.read,
+do st ← get,
 return (do
   hs ← st.sat_hyps.values,
   h ← [hs.1, hs.2],
@@ -206,11 +193,11 @@ return (do
   [h])
 
 meta def get_clause_count : prover ℕ :=
-do s ← state_t.read, return s.clause_counter
+do s ← get, return s.clause_counter
 
 meta def get_new_cls_id : prover clause_id := do
-state ← state_t.read,
-state_t.write { state with clause_counter := state.clause_counter + 1 },
+state ← get,
+put { state with clause_counter := state.clause_counter + 1 },
 return state.clause_counter
 
 meta def mk_derived (c : clause) (sc : score) : prover derived_clause := do
@@ -221,17 +208,18 @@ return { id := id, c := c, selected := [], assertions := ass, sc := sc }
 meta def add_inferred (c : derived_clause) : prover unit := do
 c' ← c.c.normalize, c' ← return { c with c := c' },
 register_consts_in_precedence (contained_funsyms c'.c.type).values,
-state ← state_t.read,
-state_t.write { state with newly_derived := c' :: state.newly_derived }
+state ← get,
+put { state with newly_derived := c' :: state.newly_derived },
+skip
 
 
 
 -- FIXME: what if we've seen the variable before, but with a weaker score?
 meta def mk_sat_var (v : expr) (suggested_ph : bool) (suggested_ev : score) : prover unit :=
-do st ← state_t.read, if st.sat_hyps.contains v then return () else do
+do st ← get, if st.sat_hyps.contains v then return () else do
 hpv ← mk_local_def `h v,
 hnv ← mk_local_def `hn $ imp v st.local_false,
-state_t.modify $ λst, { st with sat_hyps := st.sat_hyps.insert v (hpv, hnv) },
+modify $ λst, { st with sat_hyps := st.sat_hyps.insert v (hpv, hnv) },
 in_sat_solver $ cdcl.mk_var_core v suggested_ph,
 match v with
 | (pi _ _ _ _) := do
@@ -242,7 +230,7 @@ match v with
 end
 
 meta def get_sat_hyp_core (v : expr) (ph : bool) : prover (option expr) :=
-flip monad.lift state_t.read $ λst,
+flip (<$>) get $ λst,
   match st.sat_hyps.find v with
   | some (hp, hn) := some $ if ph then hp else hn
   | none := none
@@ -257,22 +245,23 @@ end
 
 meta def add_sat_clause (c : clause) (suggested_ev : score) : prover unit := do
 c ← c.distinct,
-already_added ← flip monad.lift state_t.read $ λst, decidable.to_bool $
+already_added ← flip (<$>) get $ λst, decidable.to_bool $
                      c.type ∈ st.sat_solver.clauses.map (λd, d.type),
 if already_added then return () else do
 c.get_lits.mmap' $ λl, mk_sat_var l.formula l.is_neg suggested_ev,
 in_sat_solver $ cdcl.mk_clause c,
-state_t.modify $ λst, { st with needs_sat_run := tt }
+modify $ λst, { st with needs_sat_run := tt },
+skip
 
 meta def sat_eval_lit (v : expr) (pol : bool) : prover bool :=
-do v_st ← flip monad.lift state_t.read $ λst, st.current_model.find v,
+do v_st ← flip (<$>) get $ λst, st.current_model.find v,
 match v_st with
 | some ph := return $ if pol then ph else bnot ph
 | none := return tt
 end
 
 meta def sat_eval_assertion (assertion : expr) : prover bool :=
-do lf ← flip monad.lift state_t.read $ λst, st.local_false,
+do lf ← flip (<$>) get $ λst, st.local_false,
 match is_local_not lf assertion.local_type with
 | some v := sat_eval_lit v ff
 | none := sat_eval_lit assertion.local_type tt
@@ -300,45 +289,45 @@ ass_v ← sat_eval_assertions c.assertions,
 if c.c.num_quants = 0 ∧ c.c.num_lits = 0 then
   add_sat_clause c.clause_with_assertions c.sc
 else if ¬ass_v then do
-  state_t.modify $ λst, { st with locked := ⟨c, []⟩ :: st.locked }
+  modify $ λst, { st with locked := ⟨c, []⟩ :: st.locked }, skip
 else do
-  state_t.modify $ λst, { st with passive := st.passive.insert c.id c }
+  modify $ λst, { st with passive := st.passive.insert c.id c }, skip
 
 meta def remove_passive (id : clause_id) : prover unit :=
-do state ← state_t.read, state_t.write { state with passive := state.passive.erase id }
+do state ← get, put { state with passive := state.passive.erase id }, skip
 
 meta def move_locked_to_passive : prover unit := do
-locked ← flip monad.lift state_t.read (λst, st.locked),
+locked ← flip (<$>) get (λst, st.locked),
 new_locked ← flip filter locked (λlc, do
   reason_vals ← mapm sat_eval_assertions lc.reasons,
   c_val ← sat_eval_assertions lc.dc.assertions,
   if reason_vals.for_all (λr, r = ff) ∧ c_val then do
-    state_t.modify $ λst, { st with passive := st.passive.insert lc.dc.id lc.dc },
+    modify $ λst, { st with passive := st.passive.insert lc.dc.id lc.dc },
     return ff
   else
     return tt
 ),
-state_t.modify $ λst, { st with locked := new_locked }
+modify $ λst, { st with locked := new_locked }, skip
 
 meta def move_active_to_locked : prover unit :=
 do active ← get_active, active.values.mmap' $ λac, do
   c_val ← sat_eval_assertions ac.assertions,
   if ¬c_val then do
-     state_t.modify $ λst, { st with
+     modify $ λst, { st with
        active := st.active.erase ac.id,
        locked := ⟨ac, []⟩ :: st.locked
-     }
+     }, skip
   else
     return ()
 
 meta def move_passive_to_locked : prover unit :=
-do passive ← flip monad.lift state_t.read $ λst, st.passive, passive.to_list.mmap' $ λpc, do
+do passive ← flip (<$>) get $ λst, st.passive, passive.to_list.mmap' $ λpc, do
   c_val ← sat_eval_assertions pc.2.assertions,
   if ¬c_val then do
-    state_t.modify $ λst, { st with
+    modify $ λst, { st with
       passive := st.passive.erase pc.1,
       locked := ⟨pc.2, []⟩ :: st.locked
-    }
+    }, skip
   else
     return ()
 
@@ -347,12 +336,12 @@ def super_cc_config : cc_config :=
 
 meta def do_sat_run : prover (option expr) :=
 do sat_result ← in_sat_solver $ cdcl.run (cdcl.theory_solver_of_tactic $ using_smt $ return ()),
-state_t.modify $ λst, { st with needs_sat_run := ff },
-old_model ← lift prover_state.current_model state_t.read,
+modify $ λst, { st with needs_sat_run := ff },
+old_model ← prover_state.current_model <$> get,
 match sat_result with
 | (cdcl.result.unsat proof) := return (some proof)
 | (cdcl.result.sat new_model) := do
-    state_t.modify $ λst, { st with current_model := new_model },
+    modify $ λst, { st with current_model := new_model },
     move_locked_to_passive,
     move_active_to_locked,
     move_passive_to_locked,
@@ -360,23 +349,23 @@ match sat_result with
 end
 
 meta def take_newly_derived : prover (list derived_clause) := do
-state ← state_t.read,
-state_t.write { state with newly_derived := [] },
+state ← get,
+put { state with newly_derived := [] },
 return state.newly_derived
 
 meta def remove_redundant (id : clause_id) (parents : list derived_clause) : prover unit := do
 when (not $ parents.for_all $ λp, p.id ≠ id) (fail "clause is redundant because of itself"),
-red ← flip monad.lift state_t.read (λst, st.active.find id),
+red ← flip (<$>) get (λst, st.active.find id),
 match red with
 | none := return ()
 | some red := do
 let reasons := parents.map (λp, p.assertions),
 let assertion := red.assertions,
 if reasons.for_all $ λr, r.subset_of assertion then do
-  state_t.modify $ λst, { st with active := st.active.erase id }
+  modify $ λst, { st with active := st.active.erase id }, skip
 else do
-  state_t.modify $ λst, { st with active := st.active.erase id,
-                                 locked := ⟨red, reasons⟩ :: st.locked }
+  modify $ λst, { st with active := st.active.erase id,
+                                 locked := ⟨red, reasons⟩ :: st.locked }, skip
 end
 
 meta def inference := derived_clause → prover unit
@@ -406,10 +395,10 @@ match maybe_simpld with
 end
 
 meta def preprocessing_rule (f : list derived_clause → prover (list derived_clause)) : prover unit := do
-state ← state_t.read,
+state ← get,
 newly_derived' ← f state.newly_derived,
-state' ← state_t.read,
-state_t.write { state' with newly_derived := newly_derived' }
+state' ← get,
+put { state' with newly_derived := newly_derived' }, skip
 
 meta def clause_selection_strategy := ℕ → prover clause_id
 
@@ -423,11 +412,11 @@ meta def empty (local_false : expr) : prover_state :=
   current_model := rb_map.mk _ _, sat_hyps := rb_map.mk _ _, needs_sat_run := ff }
 
 meta def initial (local_false : expr) (clauses : list clause) : tactic prover_state := do
-after_setup ← clauses.mmap' (λc : clause,
+after_setup ← (clauses.mmap' (λc : clause,
   let in_sos := ((contained_lconsts c.proof).erase local_false.local_uniq_name).size = 0 in
   do mk_derived c { priority := score.prio.immediate, in_sos := in_sos,
                     age := 0, cost := 0 } >>= add_inferred
-) $ empty local_false,
+)).run (empty local_false),
 return after_setup.2
 
 end prover_state

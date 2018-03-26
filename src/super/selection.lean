@@ -71,10 +71,10 @@ meta def find_minimal_age (passive : rb_map clause_id derived_clause) : clause_i
 find_minimal_by passive $ λc, (c.sc.priority, c.sc.age, c.id)
 
 meta def weight_clause_selection : clause_selection_strategy :=
-assume  iter, do state ← state_t.read, return $ find_minimal_weight state.passive
+assume  iter, do state ← get, return $ find_minimal_weight state.passive
 
 meta def oldest_clause_selection : clause_selection_strategy :=
-assume  iter, do state ← state_t.read, return $ find_minimal_age state.passive
+assume  iter, do state ← get, return $ find_minimal_age state.passive
 
 meta def age_weight_clause_selection (thr mod : ℕ) : clause_selection_strategy :=
 assume  iter, if iter % mod < thr then

@@ -1,8 +1,8 @@
 language: generic
 
 install:
-  - curl https://leanprover.github.io/lean-nightly/build/lean-nightly-linux.tar.gz | tar xz -C ..
-  - export PATH=../lean-nightly-linux/bin:$PATH
+  - curl https://raw.githubusercontent.com/Kha/elan/master/elan-init.sh -sSf | sh -s -- --default-toolchain none -y
+  - source ~/.elan/env
 
 script:
   - leanpkg test

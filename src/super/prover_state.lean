@@ -25,16 +25,16 @@ def sched_now (sc : score) : score := { sc with priority := prio.immediate }
 def inc_cost (sc : score) (n : ℕ) : score := { sc with cost := sc.cost + n }
 
 def min (a b : score) : score :=
-{ priority := nat.min a.priority b.priority,
+{ priority := min a.priority b.priority,
   in_sos := a.in_sos && b.in_sos,
-  cost := nat.min a.cost b.cost,
-  age := nat.min a.age b.age }
+  cost := min a.cost b.cost,
+  age := min a.age b.age }
 
 def combine (a b : score) : score :=
-{ priority := nat.max a.priority b.priority,
+{ priority := max a.priority b.priority,
   in_sos := a.in_sos && b.in_sos,
   cost := a.cost + b.cost,
-  age := nat.max a.age b.age }
+  age := max a.age b.age }
 end score
 
 namespace score

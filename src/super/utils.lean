@@ -65,23 +65,11 @@ private def zip_with_index' {A} : ℕ → list A → list (A × ℕ)
 def zip_with_index {A} : list A → list (A × ℕ) :=
 zip_with_index' 0
 
-meta def merge_sorted {A} [has_lt A] [decidable_rel ((<) : A → A → Prop)] : list A → list A → list A
-| [] ys := ys
-| xs [] := xs
-| (x::xs) (y::ys) :=
-  if x < y then
-    x :: merge_sorted xs (y::ys)
-  else
-    y :: merge_sorted (x::xs) ys
+def sort {A} [has_lt A] [decidable_rel ((<) : A → A → Prop)] : list A → list A :=
+qsort (λ x y, x < y)
 
-meta def sort {A} [has_lt A] [decidable_rel ((<) : A → A → Prop)] : list A → list A
-| (x::xs) :=
-  let (smaller, greater_eq) := partition (λy, y < x) xs in
-  merge_sorted (sort smaller) (x :: sort greater_eq)
-| [] := []
-
-meta def sort_on {A B} (f : A → B) [has_lt B] [decidable_rel ((<) : B → B → Prop)] : list A → list A :=
-@sort _ ⟨λx y, f x < f y⟩ _
+def sort_on {A B} (f : A → B) [has_lt B] [decidable_rel ((<) : B → B → Prop)] : list A → list A :=
+qsort (λ x y, f x < f y)
 
 end list
 
@@ -135,9 +123,3 @@ end
 
 end tactic
 
-namespace nat
-
-def min (m n : ℕ) := if m < n then m else n
-def max (m n : ℕ) := if m > n then m else n
-
-end nat

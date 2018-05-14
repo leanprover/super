@@ -4,11 +4,7 @@ open tactic
 def prime (n : ℕ) := ∀ d, d ∣ n → d = 1 ∨ d = n
 
 lemma nat_mul_cancel_one {m n : ℕ} : m ≠ 0 → m * n = m → n = 1 :=
-begin
-intros h1 h2,
-have: m > 0, begin cases m, contradiction, apply nat.zero_lt_succ, end,
-apply nat.eq_of_mul_eq_mul_left, assumption, simp *
-end
+by cases m; super nat.zero_lt_succ nat.eq_of_mul_eq_mul_left nat.mul_one
 
 lemma not_prime_zero : ¬ prime 0 :=
 by intro h; cases h 2 ⟨0, by simp⟩; cases h_1
@@ -28,8 +24,8 @@ example (m n : ℕ) : 0 + m = 0 + n → m = n :=
 by super with nat.zero_add
 
 example : ∀x y : ℕ, x + y = y + x :=
-begin intros, induction x, have h : nat.zero = 0 := rfl,
-      super with nat.add_zero nat.zero_add,
+begin intros, have h : nat.zero = 0 := rfl, induction x,
+      super with add_zero zero_add,
       super with nat.add_succ nat.succ_add end
 
 example (i) [inhabited i] : nonempty i := by super

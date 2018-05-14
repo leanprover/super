@@ -1,19 +1,28 @@
 import super
 open tactic
 
-def prime (n : ℕ) := ∀d, d ∣ n → d = 1 ∨ d = n
+def prime (n : ℕ) := ∀ d, d ∣ n → d = 1 ∨ d = n
 
-axiom nat_mul_cancel_one (m n : ℕ) : m = m * n → n = 1
+lemma nat_mul_cancel_one {m n : ℕ} : m ≠ 0 → m * n = m → n = 1 :=
+begin
+intros h1 h2,
+have: m > 0, begin cases m, contradiction, apply nat.zero_lt_succ, end,
+apply nat.eq_of_mul_eq_mul_left, assumption, simp *
+end
 
-example {m n : ℕ} : prime (m * n) → m = 1 ∨ n = 1 :=
-by super with dvd_refl dvd_mul_of_dvd_left nat_mul_cancel_one
+lemma not_prime_zero : ¬ prime 0 :=
+by intro h; cases h 2 ⟨0, by simp⟩; cases h_1
+
+lemma ex {m n : ℕ} : prime (m * n) → m = 1 ∨ n = 1 :=
+by super with prime dvd_refl dvd_mul_right dvd_mul_left
+nat_mul_cancel_one not_prime_zero mul_zero zero_mul
 
 example : nat.zero ≠ nat.succ nat.zero := by super
 example (x y : ℕ) : nat.succ x = nat.succ y → x = y := by super
 example (i) (a b c : i) : [a,b,c] = [b,c,a] -> a = b ∧ b = c := by super
 
 definition is_positive (n : ℕ) := n > 0
-example (n : ℕ) : n > 0 ↔ is_positive n := by super
+example (n : ℕ) : n > 0 ↔ is_positive n := by super with is_positive
 
 example (m n : ℕ) : 0 + m = 0 + n → m = n :=
 by super with nat.zero_add

@@ -23,7 +23,7 @@ on_right_at c i $ λh, do
   hnt' ← mk_local_def `h (imp t' c.local_false),
   return [([hnt'], app hnt' h)]
 
-@[super.inf]
+-- @[super.inf]
 meta def unfold_def_inf : inf_decl := inf_decl.mk 40 $ assume  given, sequence' $ do
 r ← [try_unfold_def_right, try_unfold_def_left],
 -- NOTE: we cannot restrict to selected literals here

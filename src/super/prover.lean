@@ -112,7 +112,10 @@ open lean.parser
 open interactive
 open interactive.types
 
-meta def with_lemmas (ls : parse $ many ident) : tactic unit := ls.mmap' $ λl, do
+meta def with_lemmas (ls : parse $ many ident) : tactic unit :=
+ls.mmap' $ λ l, do
+eqn_ls ← get_eqn_lemmas_for tt l <|> return [],
+(l :: eqn_ls).mmap' $ λ l, do
 p ← mk_const l,
 t ← infer_type p,
 n ← get_unused_name p.get_app_fn.const_name none,
@@ -121,7 +124,9 @@ tactic.assertv n t p
 meta def super (extra_clause_names : parse $ many ident)
                (extra_lemma_names : parse with_ident_list) : tactic unit := do
 with_lemmas extra_clause_names,
-extra_lemmas ← extra_lemma_names.mmap mk_const,
-_root_.super extra_lemmas
+extra_lemmas ← extra_lemma_names.mmap (λ c, do
+  eqn_ls ← get_eqn_lemmas_for tt c,
+  (c::eqn_ls).mmap mk_const),
+_root_.super extra_lemmas.join
 
 end tactic.interactive

@@ -9,7 +9,7 @@ by cases m; super nat.zero_lt_succ nat.eq_of_mul_eq_mul_left nat.mul_one
 lemma not_prime_zero : ¬ prime 0 :=
 by intro h; cases h 2 ⟨0, by simp⟩; cases h_1
 
-lemma ex {m n : ℕ} : prime (m * n) → m = 1 ∨ n = 1 :=
+example {m n : ℕ} : prime (m * n) → m = 1 ∨ n = 1 :=
 by super with prime dvd_refl dvd_mul_right dvd_mul_left
 nat_mul_cancel_one not_prime_zero mul_zero zero_mul
 

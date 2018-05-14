@@ -335,7 +335,7 @@ def super_cc_config : cc_config :=
 { em := ff }
 
 meta def do_sat_run : prover (option expr) :=
-do sat_result ← in_sat_solver $ cdcl.run (cdcl.theory_solver_of_tactic $ using_smt $ return ()),
+do sat_result ← in_sat_solver $ cdcl.run (cdcl.theory_solver_of_tactic failure),
 modify $ λst, { st with needs_sat_run := ff },
 old_model ← prover_state.current_model <$> get,
 match sat_result with

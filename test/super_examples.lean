@@ -7,11 +7,14 @@ lemma nat_mul_cancel_one {m n : ℕ} : m ≠ 0 → m * n = m → n = 1 :=
 by cases m; super nat.zero_lt_succ nat.eq_of_mul_eq_mul_left nat.mul_one
 
 lemma not_prime_zero : ¬ prime 0 :=
-by intro h; cases h 2 ⟨0, by simp⟩; cases h_1
+by intro h; cases h 2 ⟨0, rfl⟩; cases h_1
+
+@[simp] lemma nat.dvd_refl (m : ℕ) : m ∣ m := ⟨1, by simp [nat.mul_one]⟩
+@[simp] theorem nat.dvd_mul_left (a b : ℕ) : a ∣ b * a := ⟨b, nat.mul_comm _ _⟩
 
 example {m n : ℕ} : prime (m * n) → m = 1 ∨ n = 1 :=
-by super with prime dvd_refl dvd_mul_right dvd_mul_left
-nat_mul_cancel_one not_prime_zero mul_zero zero_mul
+by super with prime nat.dvd_refl nat.dvd_mul_right nat.dvd_mul_left
+nat_mul_cancel_one not_prime_zero nat.mul_zero nat.zero_mul
 
 example : nat.zero ≠ nat.succ nat.zero := by super
 example (x y : ℕ) : nat.succ x = nat.succ y → x = y := by super
@@ -25,7 +28,7 @@ by super with nat.zero_add
 
 example : ∀x y : ℕ, x + y = y + x :=
 begin intros, have h : nat.zero = 0 := rfl, induction x,
-      super with add_zero zero_add,
+      super with nat.add_zero nat.zero_add,
       super with nat.add_succ nat.succ_add end
 
 example (i) [inhabited i] : nonempty i := by super

@@ -64,6 +64,20 @@ meta def age_of_clause_id : name → ℕ
 | (name.mk_numeral i _) := unsigned.to_nat i
 | _ := 0
 
+local attribute [instance]
+def prod_has_lt {α β} [has_lt α] [has_lt β] : has_lt (α × β) :=
+⟨prod.lex (<) (<)⟩
+
+local attribute [instance]
+def prod_has_lt_decidable {α β} [has_lt α] [has_lt β] [decidable_rel (@has_lt.lt α _)] [decidable_rel (@has_lt.lt β _)] [decidable_eq α] :
+  decidable_rel (@has_lt.lt (α × β) _)
+| (a,b) (c,d) := if h : a < c then is_true (prod.lex.left _ _ h) else
+  if h : a = c then
+    if h2 : b < d then is_true (h ▸ prod.lex.right _ h2) else
+      is_false (by intro h3; subst h; cases h3; contradiction)
+  else
+    is_false (by intro h2; cases h2; contradiction)
+
 meta def find_minimal_weight (passive : rb_map clause_id derived_clause) : clause_id :=
 find_minimal_by passive $ λc, (c.sc.priority, clause_weight c + c.sc.cost, c.sc.age, c.id)
 

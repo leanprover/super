@@ -80,7 +80,7 @@ meta def clause_with_assertions (ac : derived_clause) : clause :=
 ac.c.close_constn ac.assertions
 
 meta def update_proof (dc : derived_clause) (p : expr) : derived_clause :=
-{ dc with c := { (dc.c) with proof := p } }
+{ dc with c := { dc.c with proof := p } }
 
 end derived_clause
 

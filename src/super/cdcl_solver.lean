@@ -67,8 +67,8 @@ meta instance prop_lit.decidable_lt : decidable_rel ((<) : prop_lit → prop_lit
 λl₁ l₂, match l₁, l₂ with
 | pos _, neg _   := is_true trivial
 | neg _, pos _   := is_false not_false
-| pos v₁, pos v₂ := expr.decidable_rel v₁ v₂
-| neg v₁, neg v₂ := expr.decidable_rel v₁ v₂
+| pos v₁, pos v₂ := expr.lt_prop.decidable_rel v₁ v₂
+| neg v₁, neg v₂ := expr.lt_prop.decidable_rel v₁ v₂
 end
 
 meta def of_cls_lit : clause.literal → prop_lit

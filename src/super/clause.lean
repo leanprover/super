@@ -54,7 +54,7 @@ match e with
       { c with num_quants := c.num_quants + 1, proof := proof', type := type' }
     else
       { c with num_lits := c.num_lits + 1, proof := proof', type := type' }
-| _ := ⟨0, 0, default expr, default expr, default expr⟩
+| _ := ⟨0, 0, default, default, default⟩
 end
 
 meta def open_constn : clause → ℕ → tactic (clause × list expr)

@@ -46,7 +46,7 @@ meta def run_prover_loop
 sequence' preprocessing_rules,
 new ← take_newly_derived, new.mmap' register_as_passive,
 when (is_trace_enabled_for `super) $ new.mmap' $ λn,
-  tactic.trace { n with c := { (n.c) with proof := const (mk_simple_name "derived") [] } },
+  tactic.trace { n with c := { n.c with proof := const (mk_simple_name "derived") [] } },
 needs_sat_run ← flip (<$>) get (λst, st.needs_sat_run),
 if needs_sat_run then do
   res ← do_sat_run,
